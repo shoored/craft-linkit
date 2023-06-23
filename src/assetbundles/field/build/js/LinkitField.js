@@ -1,7 +1,7 @@
 Garnish.LinkitField = Garnish.Base.extend({
 	defaults: {
 		id: null,
-		name: null
+		name: null,
 	},
 
 	id: null,
@@ -13,28 +13,55 @@ Garnish.LinkitField = Garnish.Base.extend({
 
 	$settingsInputs: null,
 
-	init: function(settings) {
+	init: function (settings) {
 		this.setSettings(settings, this.defaults);
 
 		this.id = settings.id || null;
 		this.name = settings.name || null;
-		this.$field = $("#" + settings.id + "-field");
+		this.$field = $('#' + settings.id + '-field');
 
-		this.$typeSelect = this.$field.find("#" + settings.id + "-type");
+		this.$typeSelect = this.$field.find('#' + settings.id + '-type');
 		this.currentType = this.$typeSelect.val();
-		this.addListener(this.$typeSelect, "change", "onChangeType");
+		this.addListener(this.$typeSelect, 'change', 'onChangeType');
 
-		this.$settingsInputs = this.$field.find(".linkit--settings");
+		this.$settingsInputs = this.$field.find('.linkit--settings');
 	},
 
-	onChangeType: function(e) {
+	onChangeType: function (e) {
 		var $select = $(e.currentTarget);
 
 		this.type = $select.val();
-		if (this.type === "") {
-			this.$settingsInputs.addClass("hidden");
+		if (this.type === '') {
+			this.$settingsInputs.addClass('hidden');
 		} else {
-			this.$settingsInputs.removeClass("hidden");
+			this.$settingsInputs.removeClass('hidden');
 		}
-	}
+	},
 });
+
+var elementSelectInit = Craft.BaseElementSelectInput.prototype.init;
+Craft.BaseElementSelectInput.prototype.init = function (settings) {
+	elementSelectInit.apply(this, arguments);
+
+	if (!settings.id.includes('fruitstudios-linkit')) {
+		return;
+	}
+
+	var siteIdField = $('#' + settings.id)
+		.parent()
+		.find("input[type=hidden][id$='SiteId']");
+
+	if (siteIdField.length < 1) {
+		return;
+	}
+
+	siteIdField = siteIdField[0];
+
+	this.on('selectElements', function (e) {
+		siteIdField.value = e.elements[0].siteId;
+	});
+
+	this.on('removeElements', function (e) {
+		siteIdField.value = '';
+	});
+};
